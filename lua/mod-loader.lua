@@ -62,15 +62,15 @@ project "Mod Loader"
 		warnings "off"
 
 		pchheader "stdafx.hpp"
-		pchsource "../src/mod-loader/stdafx.cpp"
+		pchsource "../src/stdafx.cpp"
 		forceincludes "stdafx.hpp"
 
 		includedirs {
-			"../src/mod-loader/",
+			"../src/",
 		}
 
 		files {
-			"../src/mod-loader/**",
+			"../src/**",
 		}
 
 		linkoptions {
