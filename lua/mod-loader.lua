@@ -57,7 +57,7 @@ workspace "Mod Loader"
 project "Mod Loader"
 		targetname "Haggle"
 		language "c++"
-		cppdialect "c++17"
+		cppdialect "c++20"
 		kind "consoleapp"
 		warnings "off"
 

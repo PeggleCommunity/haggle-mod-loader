@@ -78,7 +78,7 @@ void init()
 	}
 }
 
-DWORD find_proc_id(const std::wstring& processName)
+DWORD find_proc_id(const std::string& process_name)
 {
 	PROCESSENTRY32 processInfo;
 	processInfo.dwSize = sizeof(processInfo);
@@ -89,7 +89,8 @@ DWORD find_proc_id(const std::wstring& processName)
 	}
 
 	Process32First(processesSnapshot, &processInfo);
-	if (!processName.compare(processInfo.szExeFile))
+	std::wstring exe_file(processInfo.szExeFile);
+	if (!process_name.compare(std::string(exe_file.begin(), exe_file.end())))
 	{
 		CloseHandle(processesSnapshot);
 		return processInfo.th32ProcessID;
@@ -97,7 +98,8 @@ DWORD find_proc_id(const std::wstring& processName)
 
 	while (Process32Next(processesSnapshot, &processInfo))
 	{
-		if (!processName.compare(processInfo.szExeFile))
+		std::wstring exe_file(processInfo.szExeFile);
+		if (!process_name.compare(std::string(exe_file.begin(), exe_file.end())))
 		{
 			CloseHandle(processesSnapshot);
 			return processInfo.th32ProcessID;
@@ -108,11 +110,11 @@ DWORD find_proc_id(const std::wstring& processName)
 	return 0;
 }
 
-bool terminate_process(const std::wstring& processName)
+bool terminate_process(const std::string& process_name)
 {
 	bool success = false;
 
-	if (auto pid = find_proc_id(processName))
+	if (auto pid = find_proc_id(process_name))
 	{
 		auto handle = OpenProcess(PROCESS_TERMINATE, false, pid);
 		success = TerminateProcess(handle, 1);
@@ -131,12 +133,29 @@ int main(int argc, char* argv[])
 
 	if (!std::filesystem::exists("./mods/cache.bin"))
 	{
-		if (terminate_process(L"Peggle.exe"))
+		int appid = 3480;
+		std::string game = "Peggle";
+		std::string exe = std::format("{}.exe", game);
+
+		if (!std::filesystem::exists(exe))
 		{
-			if (terminate_process(L"popcapgame1.exe"))
+			appid = 3540;
+			game = "PeggleNights";
+			exe = std::format("{}.exe", game);
+
+			if (!std::filesystem::exists(exe))
+			{
+				MessageBoxA(nullptr, "Haggle was unable to determine which game this directory belongs to.\nPlease try again in the proper directory.", "Haggle Mod Loader", 0);
+				return 0;
+			}
+		}
+
+		if (terminate_process(exe))
+		{
+			if (terminate_process("popcapgame1.exe"))
 			{
 				std::filesystem::path cache = std::filesystem::absolute(std::filesystem::current_path() / "mods/cache.bin");
-				std::filesystem::rename("C:/ProgramData/PopCap Games/Peggle/popcapgame1.exe", cache.c_str());
+				std::filesystem::rename(std::format("C:/ProgramData/PopCap Games/{}/popcapgame1.exe", game).c_str(), cache.c_str());
 				ShellExecuteA(nullptr, "open", "Haggle.exe", 0, 0, SW_SHOWNORMAL);
 				return 0;
 			}
@@ -152,8 +171,8 @@ int main(int argc, char* argv[])
 
 			if (resp == IDRETRY)
 			{
-				ShellExecuteA(0, "open", "steam://run/3480/", 0, 0, 0);
-				while (!find_proc_id(L"Peggle.exe"))
+				ShellExecuteA(0, "open", std::format("steam://run/{}/", appid).c_str(), 0, 0, 0);
+				while (!find_proc_id(exe))
 				{
 					Sleep(1000);
 				}
