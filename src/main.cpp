@@ -46,7 +46,11 @@ void init()
 			{
 				if (ends_with(bin, ext))
 				{
-					auto mod = LoadLibraryA(bin.c_str());
+					auto mod = LoadLibraryExA(
+						bin.c_str(),
+						nullptr,
+						LOAD_LIBRARY_SEARCH_DEFAULT_DIRS | LOAD_LIBRARY_SEARCH_USER_DIRS
+					);
 
 					if (GetLastError() != 0)
 					{
@@ -126,6 +130,7 @@ bool terminate_process(const std::string& process_name)
 
 int main(int argc, char* argv[])
 {
+	AddDllDirectory(L"./mods");
 	if (!std::filesystem::exists("./mods/"))
 	{
 		std::filesystem::create_directory("./mods/");
